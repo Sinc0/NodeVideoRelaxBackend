@@ -1,0 +1,26 @@
+[
+    {
+        "category": "general",
+        "urls": [
+                    "PLxnadpeGdTxCwRkZTLMhjbT_EAu6bAIZy", 
+                    "PLy1UbTtb_A9L4gkexK3sHwYo3pfVAOSQI", 
+                    "PLWS1kJ_66HMILlgZqHJBlBQqllP2o-gmm"
+                ]
+    },
+    {
+        "category": "gaming",
+        "urls": [
+                    "PLJAzFcYKyx4QBMgSXKieHNRU8zttGrk_l",
+                    "PLTxgzJqWtkFbixxAee4S1z4Vlv3nTZF-t", 
+                    "PLVX_ojm9zPq7yLlqFGhCLG_1GSHD3vpvu"
+                ]
+    },
+    {
+        "category": "food",
+        "urls": [
+                    "PLeoy0zUu6bqlVkoXIZAFtuzO2N_kloRut", 
+                    "PLeoy0zUu6bqn98GDzbmmdeGD2UKGmw5FP", 
+                    "PLeoy0zUu6bqm0yuWxPt4KUcADqi53Wt1G"
+                ]
+    }
+]

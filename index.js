@@ -22,6 +22,9 @@ const SocketServer = new Server(server, {
         }
     }
 });
+const playlistsJSON = require('./playlists.json')
+
+
 
 //endpoint
 // app.get('/*', (req, res) => {
@@ -38,7 +41,11 @@ server.listen(port, () => {
 });
 
 //variables
-serverUsers = []
+var serverUsers = []
+var serverRooms = []
+var videosCurrentlyPlaying = []
+var serverAdmins = []
+var serverDefaultPlaylists = []
 
 //create namespaces
 // const adminNamespace = SocketServer.of("/admin");
@@ -51,11 +58,27 @@ let all_namespaces = Array.from(nsps, ([namespace]) => ({ type: 'namespace', nam
 
 // SocketServer.of("/admin").on("connection", (socket) => {
     // console.log(socket.nsp.name)
-
+    
     // const newNamespace = socket.nsp; // newNamespace.name === "/dynamic-101"
     // broadcast to all clients in the given sub-namespace  
     // newNamespace.emit("hello");
-// });
+    // });
+
+function randomPlaylist(category)
+{
+    let randomNumber = Math.floor(Math.random() * 3);
+    // console.log("randomNumber: " + randomNumber)
+
+    // print all databases
+    playlistsJSON.forEach(obj => {
+        if(obj.category == category)
+        {
+            pl = obj.urls[randomNumber]
+        }
+    });
+    
+    return pl
+}
 
 SocketServer.of("/").on('connection', (client) => {
     //variables
@@ -136,9 +159,12 @@ SocketServer.of("/").on('connection', (client) => {
                 allRoomsFormatted.push(allRooms[r])
             }
         }
-
+        
         //send socket info message
-        SocketServer.emit('info', allRoomsFormatted, allClients, all_namespaces, clientsAllJSON);
+        SocketServer.emit('info', allRoomsFormatted, allClients, all_namespaces, clientsAllJSON, videosCurrentlyPlaying, JSON.stringify(playlistsJSON));
+
+        //update server rooms
+        serverRooms = allRoomsFormatted
     }
 
     //set default client name
@@ -146,10 +172,8 @@ SocketServer.of("/").on('connection', (client) => {
     let clientId = client.id
     
     //set default client channel
-    client.join("general")
-
-    //send socket join room message
-    SocketServer.sockets.in("general").emit('join room', clientName + " joined the room")
+    client.join("temp")
+    // SocketServer.sockets.in("temp").emit('join room', clientName + " joined the room") //send socket join room message
 
     //debugging
     // console.log('user connected' + " / " + socketId + " / " + clientIp + " / " + clientNsp);
@@ -316,7 +340,7 @@ SocketServer.of("/").on('connection', (client) => {
         //send leave room, create room and join room socket message
         SocketServer.sockets.in(oldRoom).emit('leave room', clientName + " left the room")
         SocketServer.sockets.in(newRoom).emit('create room', newRoom + " room created")
-        SocketServer.sockets.in(newRoom).emit('join room', clientName + " joined the room")
+        // SocketServer.sockets.in(newRoom).emit('join room', clientName + " joined the room")
     });
     
     //handle socket disconnect message
@@ -382,6 +406,206 @@ SocketServer.of("/").on('connection', (client) => {
         //refresh info on screen
         updateInfo(client)
     })
+
+    client.on('video command', (msgObj) => {
+        //debugging
+        // console.log("\nvideo command")
+        // console.log(msgObj)
+
+        //variables
+        var content = null
+        var room = null
+        var userId = null
+        var userName = null
+        var playingVideosLastWholeSecond = null
+        var playingVideoId = null
+        var videoPlaying = null
+
+        content = msgObj.content
+        room = msgObj.room
+        userId = msgObj.userId
+        userName = msgObj.userName
+        playingVideosLastWholeSecond = msgObj.playingVideosLastWholeSecond
+        playingVideoId = msgObj.playingVideoId
+        videoPlaying = msgObj.videoPlaying
+        playlistCurrentVideoIndex = msgObj.playlistCurrentVideoIndex
+        videoPlaylist = msgObj.videoPlaylist
+        videoPlaylistId = msgObj.videoPlaylistId
+        syncMaster = msgObj.syncMaster
+
+        //create json obj
+        // rd = "\"room\"" + ":" + "\"" + room + "\"" + "," + "\"videoId\"" + ":" + "\"" + playingVideoId + "\"" + "," + "\"lastWholeSecond\"" + ":" + playingVideosLastWholeSecond + "," + "\"id\"" + ":" + "\"" + room + playingVideoId + "\"" + "," + "\"videoPlaying\"" + ":" + "\"" + videoPlaying + "\""
+        // rd = JSON.parse("{" + rd + "}")
+
+        // if(msgObj.content == "resync video")
+        // {
+        //     SocketServer.sockets.in(msgObj.room).emit('video command', msgObj)
+        // }
+        // if(msgObj.content == "next video")  
+        // {
+        //     //send socket chat message to specific room        
+        //     SocketServer.sockets.in(msgObj.room).emit('video command', msgObj)
+        // }
+        // else if(msgObj.content == "previous video")
+        // {
+        //     //send socket chat message to specific room        
+        //     SocketServer.sockets.in(msgObj.room).emit('video command', msgObj)
+        // }
+        // else if(msgObj.content == "sync video")
+        // {
+        //     //send socket chat message to specific room        
+        //     SocketServer.sockets.in(msgObj.room).emit('video command', msgObj)
+        // }
+        if(msgObj.content == "random playlist")
+        {
+            console.log("random playlist")
+            
+            let category = msgObj.room
+            let newPlaylist = randomPlaylist(category)
+            
+            console.log(msgObj)
+            msgObj.lastWholeSecond = 0
+            msgObj.videoPlaying = false
+            msgObj.videoId = null
+            msgObj.playlistCurrentVideoIndex = 0 
+            msgObj.videoPlaylist = true
+            msgObj.videoPlaylistId = newPlaylist
+
+            //send socket chat message to specific room        
+            SocketServer.sockets.in(msgObj.room).emit('video command', msgObj)
+        }
+        
+        if(msgObj.content == "load video")
+        {
+            // room = msgObj.room
+            // playingVideoId = msgObj.playingVideoId
+
+            for(roomObj in videosCurrentlyPlaying)
+            {
+                if(videosCurrentlyPlaying[roomObj].room == room)
+                {
+                    videosCurrentlyPlaying[roomObj].lastWholeSecond = 0
+                    videosCurrentlyPlaying[roomObj].videoPlaying = false
+                    videosCurrentlyPlaying[roomObj].videoId = playingVideoId
+                    videosCurrentlyPlaying[roomObj].playlistCurrentVideoIndex = msgObj.playlistCurrentVideoIndex
+                    videosCurrentlyPlaying[roomObj].videoPlaylist = msgObj.videoPlaylist
+                    videosCurrentlyPlaying[roomObj].videoPlaylistId = msgObj.videoPlaylistId
+                    videosCurrentlyPlaying[roomObj].syncMaster = msgObj.syncMaster
+                }
+            }
+            // console.log(videosCurrentlyPlaying.length)
+            // console.log(JSON.stringify(videosCurrentlyPlaying))
+
+            //send socket chat message to specific room        
+            SocketServer.sockets.in(msgObj.room).emit('video command', msgObj)
+        }
+        else if(msgObj.content != "load video")
+        {
+            //variables
+            // content = msgObj.content
+            // room = msgObj.room
+            // userId = msgObj.userId
+            // userName = msgObj.userName
+            // playingVideosLastWholeSecond = msgObj.playingVideosLastWholeSecond
+            // playingVideoId = msgObj.playingVideoId
+            // videoPlaying = msgObj.videoPlaying
+            rd = "\"room\"" + ":" + "\"" + room + "\"" + "," + "\"videoId\"" + ":" + "\"" + playingVideoId + "\"" + "," + "\"lastWholeSecond\"" + ":" + playingVideosLastWholeSecond + "," + "\"id\"" + ":" + "\"" + room + playingVideoId + "\"" + "," + "\"videoPlaying\"" + ":" + "\"" + videoPlaying + "\"" + "," + "\"syncMaster\"" + ":" + "\"" + syncMaster + "\""
+            rd = JSON.parse("{" + rd + "}")
+            // rd = "," + "\"lastWholeSecond\"" + ":" + playingVideosLastWholeSecond
+            
+            // console.log("total server rooms: " + serverRooms.length)
+            // console.log(serverRooms)
+            // console.log(msgObj)
+            
+            let roomName = "\"" + "room" + "\"" + ":" + "\"" + room + "\""
+            let newVideosCurrentlyPlaying = []
+            
+            //update currently playing videos metadata
+            if(videosCurrentlyPlaying.length == 0)
+            {
+                videosCurrentlyPlaying.push(rd)
+            }
+            else if(videosCurrentlyPlaying.length > 0)
+            {
+                if(JSON.stringify(videosCurrentlyPlaying).includes(roomName))
+                {
+                    for(roomObj in videosCurrentlyPlaying)
+                    {
+                        if(videosCurrentlyPlaying[roomObj].room == room)
+                        {
+                            videosCurrentlyPlaying[roomObj].lastWholeSecond = playingVideosLastWholeSecond
+                            videosCurrentlyPlaying[roomObj].videoPlaying = videoPlaying
+                            videosCurrentlyPlaying[roomObj].videoId = playingVideoId
+                            videosCurrentlyPlaying[roomObj].playlistCurrentVideoIndex = msgObj.playlistCurrentVideoIndex
+                            videosCurrentlyPlaying[roomObj].videoPlaylist = msgObj.videoPlaylist
+                            videosCurrentlyPlaying[roomObj].videoPlaylistId = msgObj.videoPlaylistId
+                            videosCurrentlyPlaying[roomObj].syncMaster = msgObj.syncMaster
+                        }
+                    }
+                }
+                else if(!JSON.stringify(videosCurrentlyPlaying).includes(roomName))
+                {
+                    videosCurrentlyPlaying.push(rd)
+                }
+            }
+            
+            //filter out inactive rooms
+            for(let v in videosCurrentlyPlaying)
+            {
+                for(let r in serverRooms)
+                {
+                    if(videosCurrentlyPlaying[v].room == serverRooms[r].room)
+                    {
+                        newVideosCurrentlyPlaying.push(videosCurrentlyPlaying[v])
+                    }
+                }
+            }
+
+            //print active rooms
+            for(let v in newVideosCurrentlyPlaying)
+            {
+                let obj = newVideosCurrentlyPlaying[v]
+                console.log("video command: " + "room = " + obj.room + " / " + "lastWholeSecond: " + obj.lastWholeSecond + " / " + "syncMaster = " + obj.syncMaster + " / " + "video index = " + obj.playlistCurrentVideoIndex + " / " + "playlist id = " + obj.videoPlaylistId)
+            }
+
+            //update videosCurrentlyPlaying
+            videosCurrentlyPlaying = newVideosCurrentlyPlaying
+
+            // console.log("video command: " + "room = " + videosCurrentlyPlaying[v].room + " / " + "lastWholeSecond: " + videosCurrentlyPlaying[v].lastWholeSecond + " / " + "syncMaster = " + videosCurrentlyPlaying[v].syncMaster + " / " + "video index = " + videosCurrentlyPlaying[v].playlistCurrentVideoIndex + " / " + "playlist id = " + videosCurrentlyPlaying[v].videoPlaylistId)
+            console.log("videosCurrentlyPlaying: " + videosCurrentlyPlaying.length)
+            console.log("newVideosCurrentlyPlaying: " + newVideosCurrentlyPlaying.length)
+            console.log("")
+                
+            //handle client username
+            for (u in serverUsers)
+            {
+                let user = serverUsers[u]
+    
+                if(user.socketId == msgObj.userId)
+                {
+                    msgObj.userName = user.username
+                    
+                    //debugging
+                    // console.log("clientName: " + clientName)
+                    // console.log("new username: " + clientName)
+    
+                    break
+                }
+            }
+    
+            //debugging
+            // console.log("message content: " +  msgObj.content);
+            // console.log("message room: " + msgObj.room);
+            // console.log("message userId: " + msgObj.userId);
+            // console.log("message userName: " + msgObj.userName);
+            // console.log("total saved users (serverUsers) "  + serverUsers.length)
+            // console.log(serverUsers)
+    
+            //send socket chat message to specific room        
+            SocketServer.sockets.in(msgObj.room).emit('video command', msgObj)
+        }
+
+    });
     
     //refresh info on screen
     updateInfo(client)
