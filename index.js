@@ -24,8 +24,6 @@ const SocketServer = new Server(server, {
 });
 const playlistsJSON = require('./playlists.json')
 
-
-
 //endpoint
 // app.get('/*', (req, res) => {
 //       res.sendFile(__dirname + '/index.html');
@@ -355,7 +353,7 @@ SocketServer.of("/").on('connection', (client) => {
     
     //handle socket disconnect message
     client.on('disconnect', () => {
-        console.log('user disconnected');
+        // console.log('user disconnected');
 
         //variables
         let clientRooms = Array.from(client.adapter.rooms, ([room]) => ({room}))
@@ -559,9 +557,6 @@ SocketServer.of("/").on('connection', (client) => {
             
             let roomName = "\"" + "room" + "\"" + ":" + "\"" + room + "\""
             let newVideosCurrentlyPlaying = []
-            
-
-
             
             if(videosCurrentlyPlaying.length == 0) //update currently playing videos metadata
             {
