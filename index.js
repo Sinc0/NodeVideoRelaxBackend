@@ -219,39 +219,42 @@ SocketServer.of("/").on('connection', (client) => {
     });
         
     //handle socket leave room message
-    client.on('leave room', (msg) => {
-        // console.log("\nleave room")
+    // client.on('leave room', (msg) => {
+    //     // console.log("\nleave room")
 
-        //leave socket room
-        client.leave(msg)
+    //     //leave socket room
+    //     client.leave(msg)
 
-        //debugging
-        // console.log(client.adapter.rooms)
-        // console.log(client.adapter.rooms)
+    //     //debugging
+    //     // console.log(client.adapter.rooms)
+    //     // console.log(client.adapter.rooms)
 
-        //refresh info on
-        updateInfo(client)
+    //     //refresh info on
+    //     updateInfo(client)
 
-        //handle client username
-        for(u in serverUsers)
-        {
-            let user = serverUsers[u]
+    //     //handle client username
+    //     for(u in serverUsers)
+    //     {
+    //         let user = serverUsers[u]
 
-            if(user.socketId == clientId)
-            {
-                clientName = user.username
+    //         if(user.socketId == clientId)
+    //         {
+    //             clientName = user.username
 
-                //debugging
-                // console.log("clientName: " + clientName)
-                // console.log("new username: " + clientName)
+    //             //debugging
+    //             // console.log("clientName: " + clientName)
+    //             // console.log("new username: " + clientName)
 
-                break
-            }
-        }
+    //             break
+    //         }
+    //     }
 
-        //send socket leave room message
-        SocketServer.sockets.in(msg).emit('leave room', clientName + " left the room")
-    });
+    //             //create msgs
+    //             let msgLeftRoom = {content: " left the room", room: newRoom, userId: client.id, userName: clientName.substr(4)}
+
+    //     //send socket leave room message
+    //     SocketServer.sockets.in(msg).emit('leave room', msg)
+    // });
 
     //handle socket join room message
     client.on('join room', (msg) => {
@@ -289,10 +292,14 @@ SocketServer.of("/").on('connection', (client) => {
                 break
             }
         }
-
+        
+        //create msgs
+        let msgLeftRoom = {content: " left the room", room: newRoom, userId: client.id, userName: clientName.substr(4)}
+        let msgJoinRoom = {content: " joined the room", room: newRoom, userId: client.id, userName: clientName.substr(4)}
+        
         //send socket message leave room and send socket message join room
-        SocketServer.sockets.in(oldRoom).emit('leave room', clientName + " left the room")
-        SocketServer.sockets.in(newRoom).emit('join room', clientName + " joined the room")
+        SocketServer.sockets.in(oldRoom).emit('leave room', msgLeftRoom)
+        SocketServer.sockets.in(newRoom).emit('join room', msgJoinRoom)
     });
 
     //handle socket create room message
@@ -337,18 +344,36 @@ SocketServer.of("/").on('connection', (client) => {
         //refresh info on screen
         updateInfo(client)
         
-        //send leave room, create room and join room socket message
-        SocketServer.sockets.in(oldRoom).emit('leave room', clientName + " left the room")
-        SocketServer.sockets.in(newRoom).emit('create room', newRoom + " room created")
-        // SocketServer.sockets.in(newRoom).emit('join room', clientName + " joined the room")
+        //create msgs
+        let msgLeftRoom = {content: " left the room", room: newRoom, userId: client.id, userName: clientName.substr(4)}
+        let msgCreateRoom = {content: " created room " + newRoom, room: newRoom, userId: client.id, userName: clientName.substr(4)}
+        
+        //send socket message leave room and send socket message join room
+        SocketServer.sockets.in(oldRoom).emit('leave room', msgLeftRoom)
+        SocketServer.sockets.in(newRoom).emit('create room', msgCreateRoom)
     });
     
     //handle socket disconnect message
     client.on('disconnect', () => {
-        // console.log('user disconnected');
+        console.log('user disconnected');
+
+        //variables
+        let clientRooms = Array.from(client.adapter.rooms, ([room]) => ({room}))
+        let disconnectRoom = clientRooms[1]
+
+        //null check
+        if(disconnectRoom != null)
+        {
+            //create msgs
+            let msgLeftRoom = {content: " left the room", room: disconnectRoom, userId: client.id, userName: clientName.substr(4)}
+    
+            //send socket leave room message
+            SocketServer.sockets.in(clientRooms[1].room).emit('leave room', msgLeftRoom)
+        }
 
         //refresh info on screen
         updateInfo(client)
+
     });
 
     //handle socket add user message
@@ -456,7 +481,22 @@ SocketServer.of("/").on('connection', (client) => {
         //     //send socket chat message to specific room        
         //     SocketServer.sockets.in(msgObj.room).emit('video command', msgObj)
         // }
-        if(msgObj.content == "random playlist")
+
+        if(msgObj.content == "resync2 video")
+        {
+            for(roomObj in videosCurrentlyPlaying)
+            {
+                if(videosCurrentlyPlaying[roomObj].room == room)
+                {
+                    msgObj.playingVideosLastWholeSecond = videosCurrentlyPlaying[roomObj].lastWholeSecond
+                    msgObj.videoPlaying = videosCurrentlyPlaying[roomObj].videoPlaying
+                    SocketServer.sockets.in(msgObj.room).emit('video command', msgObj)
+                    break
+                }
+            }
+        }
+
+        else if(msgObj.content == "random playlist")
         {
             console.log("random playlist")
             
@@ -475,7 +515,7 @@ SocketServer.of("/").on('connection', (client) => {
             SocketServer.sockets.in(msgObj.room).emit('video command', msgObj)
         }
         
-        if(msgObj.content == "load video")
+        else if(msgObj.content == "load video")
         {
             // room = msgObj.room
             // playingVideoId = msgObj.playingVideoId
@@ -520,8 +560,10 @@ SocketServer.of("/").on('connection', (client) => {
             let roomName = "\"" + "room" + "\"" + ":" + "\"" + room + "\""
             let newVideosCurrentlyPlaying = []
             
-            //update currently playing videos metadata
-            if(videosCurrentlyPlaying.length == 0)
+
+
+            
+            if(videosCurrentlyPlaying.length == 0) //update currently playing videos metadata
             {
                 videosCurrentlyPlaying.push(rd)
             }
