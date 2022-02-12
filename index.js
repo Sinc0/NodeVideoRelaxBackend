@@ -14,8 +14,8 @@ const SocketServer = new Server(server, {
             res.writeHead(200, {
                 "Access-Control-Allow-Origin": "*",
                 "Access-Control-Allow-Methods": "GET",
-                "Access-Control-Allow-Headers": "*",
-                "Access-Control-Allow-Credentials": true
+                // "Access-Control-Allow-Headers": "*",
+                // "Access-Control-Allow-Credentials": true
             });
             
             res.end()
