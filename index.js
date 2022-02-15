@@ -356,22 +356,22 @@ SocketServer.of("/").on('connection', (client) => {
         // console.log('user disconnected');
 
         //variables
-        let clientRooms = Array.from(client.adapter.rooms, ([room]) => ({room}))
-        let disconnectRoom = clientRooms[1]
+        // let clientRooms = Array.from(client.adapter.rooms, ([room]) => ({room}))
+        // let disconnectRoom = clientRooms[1]
+        // console.log(client.adapter.rooms)
 
         //null check
-        if(disconnectRoom != null)
-        {
-            //create msgs
-            let msgLeftRoom = {content: " left the room", room: disconnectRoom, userId: client.id, userName: clientName.substr(4)}
+        // if(disconnectRoom != null)
+        // {
+        //     //create msgs
+        //     let msgLeftRoom = {content: " left the room", room: disconnectRoom, userId: client.id, userName: clientName.substr(4)}
     
-            //send socket leave room message
-            SocketServer.sockets.in(clientRooms[1].room).emit('leave room', msgLeftRoom)
-        }
+        //     //send socket leave room message
+        //     SocketServer.sockets.in(clientRooms[1].room).emit('leave room', msgLeftRoom)
+        // }
 
         //refresh info on screen
         updateInfo(client)
-
     });
 
     //handle socket add user message
