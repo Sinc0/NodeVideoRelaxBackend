@@ -23,6 +23,14 @@ const SocketServer = new Server(server, {
     }
 });
 const playlistsJSON = require('./playlists.json')
+const defaultRooms = []
+
+//set default rooms
+for(let c in playlistsJSON)
+{
+    // console.log(playlistsJSON[c].category)
+    defaultRooms.push(playlistsJSON[c].category)
+}
 
 //endpoint
 // app.get('/*', (req, res) => {
@@ -64,10 +72,10 @@ let all_namespaces = Array.from(nsps, ([namespace]) => ({ type: 'namespace', nam
 
 function randomPlaylist(category)
 {
-    let randomNumber = Math.floor(Math.random() * 3);
+    let numberOfPlaylistsPerCategory = 3
+    let randomNumber = Math.floor(Math.random() * numberOfPlaylistsPerCategory);
     // console.log("randomNumber: " + randomNumber)
 
-    // print all databases
     playlistsJSON.forEach(obj => {
         if(obj.category == category)
         {
@@ -159,7 +167,7 @@ SocketServer.of("/").on('connection', (client) => {
         }
         
         //send socket info message
-        SocketServer.emit('info', allRoomsFormatted, allClients, all_namespaces, clientsAllJSON, videosCurrentlyPlaying, JSON.stringify(playlistsJSON));
+        SocketServer.emit('info', allRoomsFormatted, allClients, all_namespaces, clientsAllJSON, videosCurrentlyPlaying, JSON.stringify(playlistsJSON), defaultRooms);
 
         //update server rooms
         serverRooms = allRoomsFormatted
