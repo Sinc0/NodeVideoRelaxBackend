@@ -1,3 +1,4 @@
+/****** includes ******/
 // const { time } = require('console');
 // const cors = require('cors')
 const express = require('express');
@@ -5,11 +6,14 @@ const app = express(); // app.use(cors())
 const http = require('http');
 const server = http.createServer(app);
 const { Server } = require("socket.io");
+
+//create socket server
 const SocketServer = new Server(server, {  
-    cors: {    
+    cors: { 
         // origin: "http://localhost:3000",    
         // methods: ["GET", "POST"] 
         // origins: ["*"],
+
         handlePreflightRequest: (req, res) => {
             res.writeHead(200, {
                 "Access-Control-Allow-Origin": "*",
@@ -22,10 +26,10 @@ const SocketServer = new Server(server, {
         }
     }
 });
+
+//set default room
 const playlistsJSON = require('./playlists.json')
 const defaultRooms = []
-
-//set default rooms
 for(let c in playlistsJSON)
 {
     // console.log(playlistsJSON[c].category)
@@ -37,14 +41,10 @@ for(let c in playlistsJSON)
 //       res.sendFile(__dirname + '/index.html');
 // });
 
-//port
+//set app port
 let port = process.env.PORT;
-if (port == null || port == "") {
-  port = 3000;
-}
-server.listen(port, () => {     
-    console.log('listening on *:' + port);
-});
+if (port == null || port == "") { port = 3000; }
+server.listen(port, () => { console.log('listening on *:' + port); });
 
 //variables
 var serverUsers = []
@@ -53,15 +53,8 @@ var videosCurrentlyPlaying = []
 var serverAdmins = []
 var serverDefaultPlaylists = []
 
-//create namespaces
+//create admin namespace
 // const adminNamespace = SocketServer.of("/admin");
-
-//all namespaces
-let nsps = SocketServer._nsps
-let all_namespaces = Array.from(nsps, ([namespace]) => ({ type: 'namespace', namespace}));
-// console.log(SocketServer._nsps)
-// console.log(all_namespaces)
-
 // SocketServer.of("/admin").on("connection", (socket) => {
     // console.log(socket.nsp.name)
     
@@ -70,22 +63,32 @@ let all_namespaces = Array.from(nsps, ([namespace]) => ({ type: 'namespace', nam
     // newNamespace.emit("hello");
     // });
 
+//all other namespaces
+let nsps = SocketServer._nsps
+let all_namespaces = Array.from(nsps, ([namespace]) => ({ type: 'namespace', namespace}));
+// console.log(SocketServer._nsps)
+// console.log(all_namespaces)
+
+
+/****** functions ******/
 function randomPlaylist(category)
 {
+    //variables
     let numberOfPlaylistsPerCategory = 3
     let randomNumber = Math.floor(Math.random() * numberOfPlaylistsPerCategory);
     // console.log("randomNumber: " + randomNumber)
 
+    //set random playlist
     playlistsJSON.forEach(obj => {
-        if(obj.category == category)
-        {
-            pl = obj.urls[randomNumber]
-        }
+        if(obj.category == category) { pl = obj.urls[randomNumber] }
     });
     
+    //return value
     return pl
 }
 
+
+//handle server traffic
 SocketServer.of("/").on('connection', (client) => {
     //variables
     var socketId = client.id
@@ -93,6 +96,7 @@ SocketServer.of("/").on('connection', (client) => {
     var clientNsp = client.nsp.name
     // var totalClients = client.server.httpServer._connections
     
+
     //used to refresh info on screen
     function updateInfo(client)
     {
@@ -173,6 +177,7 @@ SocketServer.of("/").on('connection', (client) => {
         serverRooms = allRoomsFormatted
     }
 
+
     //set default client name
     let clientName = "anon" + client.id.substring(0, 4).toUpperCase()
     let clientId = client.id
@@ -190,6 +195,7 @@ SocketServer.of("/").on('connection', (client) => {
     // console.log(client.adapter.sids)
     // console.log("nsp")
     // console.log(client.adapter.nsp.name)
+
 
     //handle socket chat message
     client.on('chat message', (msgObj) => {
@@ -224,6 +230,7 @@ SocketServer.of("/").on('connection', (client) => {
         SocketServer.sockets.in(msgObj.room).emit('chat message', msgObj)
     });
         
+
     //handle socket leave room message
     // client.on('leave room', (msg) => {
     //     // console.log("\nleave room")
@@ -261,6 +268,7 @@ SocketServer.of("/").on('connection', (client) => {
     //     //send socket leave room message
     //     SocketServer.sockets.in(msg).emit('leave room', msg)
     // });
+
 
     //handle socket join room message
     client.on('join room', (msg) => {
@@ -307,6 +315,7 @@ SocketServer.of("/").on('connection', (client) => {
         SocketServer.sockets.in(oldRoom).emit('leave room', msgLeftRoom)
         SocketServer.sockets.in(newRoom).emit('join room', msgJoinRoom)
     });
+
 
     //handle socket create room message
     client.on('create room', (msg) => {
@@ -359,6 +368,7 @@ SocketServer.of("/").on('connection', (client) => {
         SocketServer.sockets.in(newRoom).emit('create room', msgCreateRoom)
     });
     
+
     //handle socket disconnect message
     client.on('disconnect', () => {
         // console.log('user disconnected');
@@ -381,6 +391,7 @@ SocketServer.of("/").on('connection', (client) => {
         //refresh info on screen
         updateInfo(client)
     });
+
 
     //handle socket add user message
     client.on('add user', (userObj) => {
@@ -438,6 +449,8 @@ SocketServer.of("/").on('connection', (client) => {
         updateInfo(client)
     })
 
+
+    //handle socket video command message
     client.on('video command', (msgObj) => {
         //debugging
         // console.log("\nvideo command")
@@ -652,9 +665,11 @@ SocketServer.of("/").on('connection', (client) => {
 
     });
     
+
     //refresh info on screen
     updateInfo(client)
     
+
     //debugging
     // console.log(allClients)
     // console.log(allRooms)
