@@ -10,13 +10,15 @@ const playlistsJSON = require('./playlists.json')
 
 
 //variables
-var serverUsers = []
+const defaultRooms = []
+var customUsernames = []
 var serverRooms = []
+var serverTotalUsers = null
+var serverUsersList = []
 var videosCurrentlyPlaying = []
 var serverAdmins = []
 var serverDefaultPlaylists = []
 let port = process.env.PORT
-const defaultRooms = []
 
 
 //set port
@@ -98,13 +100,17 @@ SocketServer.of("/").on('connection', (client) => {
         //variables
         let rooms = client.adapter.rooms
         let clients = client.adapter.sids
+        let clientsAll = (Array.from(clients))
         let allClients = Array.from(clients, ([client]) => ({ type: 'client', client }))
         let allRooms = Array.from(rooms, ([room, clients]) => ({type: 'room', room, clients: Array.from(clients) }))
         let allRoomsFormatted = []
-        let yourRooms = Array.from(client.rooms)
-        let clientNames = serverUsers
+        //let yourRooms = Array.from(client.rooms)
         let clientsAllJSON = []
-        let clientsAll = (Array.from(clients))
+        //let clientNames = customUsernames
+        
+        //set total users arrays
+        serverTotalUsers = clientsAll.length
+        serverUsersList = clientsAll
 
         //sort client names
         for(c in clientsAll)
@@ -118,20 +124,17 @@ SocketServer.of("/").on('connection', (client) => {
             let clientName = ""
 
             //handle client username
-            for(u in serverUsers)
+            for(let u in customUsernames)
             {
-                //set user
-                let user = serverUsers[u]
-
                 //debugging
-                // console.log(JSON.parse("{" + serverUsers[u] + "}"))
-                // console.log(JSON.parse(serverUsers[u]))
-                // console.log(JSON.parse(serverUsers[u]).username)
+                // console.log(JSON.parse("{" + customUsernames[u] + "}"))
+                // console.log(JSON.parse(customUsernames[u]))
+                // console.log(JSON.parse(customUsernames[u]).username)
                 
-                if(user.socketId == clientId)
+                if(customUsernames[u].socketId == clientId)
                 {
                     //set client name
-                    clientName = user.username
+                    clientName = customUsernames[u].username
                     
                     //debugging
                     console.log("clientName: " + clientName)
@@ -170,12 +173,14 @@ SocketServer.of("/").on('connection', (client) => {
     }
 
 
-    //set client defaults
-    let clientName = "anon" + client.id.substring(0, 4).toUpperCase()
+    //set client id
     let clientId = client.id
-    client.join("temp") //set default client channel
 
-    //send socket message
+    //set client username
+    let clientName = "anon" + client.id.substring(0, 4).toUpperCase()
+
+    //join temp room
+    client.join("temp") 
     // SocketServer.sockets.in("temp").emit('join room', clientName + " joined the room") 
 
     //debugging
@@ -192,13 +197,14 @@ SocketServer.of("/").on('connection', (client) => {
     //on socket chat message
     client.on('chat message', (msgObj) => {
         //handle client username
-        for (u in serverUsers)
+        for (let u in customUsernames)
         {
-            //set user
-            let user = serverUsers[u]
-
             //set custom username if exists
-            if(user.socketId == msgObj.userId) { msgObj.userName = user.username; break }
+            if(customUsernames[u].socketId == msgObj.userId) 
+            { 
+                msgObj.userName = customUsernames[u].username
+                break 
+            }
         }
 
         //debugging
@@ -218,6 +224,12 @@ SocketServer.of("/").on('connection', (client) => {
         let newRoom = msg[0]
         let oldRoom = msg[1]
 
+        //null check
+        // if(newRoom == "null" || newRoom == null)
+        // {
+        //     newRoom = "general"
+        // }
+
         //leave old socket room and join new socket room
         client.leave(oldRoom)
         client.join(newRoom)
@@ -230,18 +242,19 @@ SocketServer.of("/").on('connection', (client) => {
         updateInfo(client)
 
         //handle client username
-        for(u in serverUsers)
+        for(let u in customUsernames)
         {
-            //set user
-            let user = serverUsers[u]
-
             //set username
-            if(user.socketId == clientId) { clientName = user.username; break }
+            if(customUsernames[u].socketId == clientId) 
+            { 
+                clientName = customUsernames[u].username
+                break 
+            }
         }
         
         //create socket messages
-        let msgLeftRoom = {content: " left the room", room: newRoom, userId: client.id, userName: clientName.substr(4)}
-        let msgJoinRoom = {content: " joined the room", room: newRoom, userId: client.id, userName: clientName.substr(4)}
+        let msgLeftRoom = {content: " left the room", room: newRoom, userId: client.id, userName: clientName }
+        let msgJoinRoom = {content: " joined the room", room: newRoom, userId: client.id, userName: clientName }
         
         //send socket messages
         SocketServer.sockets.in(oldRoom).emit('leave room', msgLeftRoom)
@@ -264,9 +277,9 @@ SocketServer.of("/").on('connection', (client) => {
     //     updateInfo(client)
 
     //     //handle client username
-    //     for(u in serverUsers)
+    //     for(u in customUsernames)
     //     {
-    //         let user = serverUsers[u]
+    //         let user = customUsernames[u]
 
     //         if(user.socketId == clientId)
     //         {
@@ -281,7 +294,7 @@ SocketServer.of("/").on('connection', (client) => {
     //     }
 
     //             //create msgs
-    //             let msgLeftRoom = {content: " left the room", room: newRoom, userId: client.id, userName: clientName.substr(4)}
+    //             let msgLeftRoom = {content: " left the room", room: newRoom, userId: client.id, userName: clientName }
 
     //     //send socket message
     //     SocketServer.sockets.in(msg).emit('leave room', msg)
@@ -308,21 +321,22 @@ SocketServer.of("/").on('connection', (client) => {
         // console.log(client.adapter.rooms)
         
         //handle client username
-        for(u in serverUsers)
+        for(let u in customUsernames)
         {
-            //set user
-            let user = serverUsers[u]
-
             //set custom username if exists
-            if(user.socketId == clientId) { clientName = user.username; break }
+            if(customUsernames[u].socketId == clientId) 
+            { 
+                clientName = customUsernames[u].username
+                break 
+            }
         }
         
         //refresh info on screen
         updateInfo(client)
         
         //create msgs
-        let msgLeftRoom = {content: " left the room", room: newRoom, userId: client.id, userName: clientName.substr(4)}
-        let msgCreateRoom = {content: " created room " + newRoom, room: newRoom, userId: client.id, userName: clientName.substr(4)}
+        let msgLeftRoom = {content: " left the room", room: newRoom, userId: client.id, userName: clientName }
+        let msgCreateRoom = {content: " created room " + newRoom, room: newRoom, userId: client.id, userName: clientName }
         
         //send socket messages
         SocketServer.sockets.in(oldRoom).emit('leave room', msgLeftRoom)
@@ -332,36 +346,36 @@ SocketServer.of("/").on('connection', (client) => {
 
     //on socket disconnect message
     client.on('disconnect', () => {
-        // console.log('user disconnected')
-
         //variables
-        // let clientRooms = Array.from(client.adapter.rooms, ([room]) => ({room}))
-        // let disconnectRoom = clientRooms[1]
-        // console.log(client.adapter.rooms)
+        let clientRooms = Array.from(client.adapter.rooms, ([room]) => ({room}))
+        let disconnectRoom = clientRooms[1]
+        
+        //debugging
+        //console.log(client.adapter.rooms)
 
         //null check
-        // if(disconnectRoom != null)
-        // {
-        //     //create msgs
-        //     let msgLeftRoom = {content: " left the room", room: disconnectRoom, userId: client.id, userName: clientName.substr(4)}
+        if(disconnectRoom != null)
+        {
+            //create msgs
+            let msgLeftRoom = {content: " left the room", room: disconnectRoom, userId: client.id, userName: clientName }
     
-        //     //send socket message
-        //     SocketServer.sockets.in(clientRooms[1].room).emit('leave room', msgLeftRoom)
-        // }
+            //send socket message
+            SocketServer.sockets.in(clientRooms[1].room).emit('leave room', msgLeftRoom)
+        }
 
         //refresh info on screen
         updateInfo(client)
     })
 
 
-    //on socket add user message
-    client.on('add user', (userObj) => {
-        //variables
-        let userId = userObj.socketId
-        let userName = userObj.username
+    //on socket add username message
+    client.on('add username', (userObj) => {
+        //debugging
+        //console.log(JSON.stringify(userObj))
+        
         let userIp = client.client.conn.remoteAddress
 
-        //update userObj
+        //set user obj
         userObj = JSON.stringify(userObj)
         userObj = userObj.replace("}", "")
         userObj = userObj.replace("{", "")
@@ -369,34 +383,38 @@ SocketServer.of("/").on('connection', (client) => {
         userObj = "{" + userObj + "}"
         userObj = JSON.parse(userObj)
         
-        //debugging
-        // console.log("user id: " + userId)
-        // console.log("username: " + userName)
-        // console.log("userIp: " + userIp)
+        let userId = userObj.socketId
+        let userName = userObj.username
 
-        //handle client username
-        if(serverUsers.length == 0)
+        //null check
+        if(customUsernames.length == 0)
         {
-            serverUsers.push(userObj) //update serverUsers
+            //update custom usernames
+            customUsernames.push(userObj) 
         }
-        else if(serverUsers.length > 0)
+        else if(customUsernames.length > 0)
         {
-            for(u in serverUsers)
-            {
-                //set user
-                let user = serverUsers[u]
+            //change client username
+            for(let u in customUsernames)
+            {           
+                console.log("user id: " + userId)
+                console.log("user socketId: " + customUsernames[u].socketId)
+                console.log("username: " + userName)
+                console.log("userIp: " + userIp)
                 
-                //update users username if existing user
-                if(userId == user.socketId) { user.username = userName }
-
-                //update serverUsers if new user
-                else if(!JSON.stringify(serverUsers).includes(userObj.socketId))
-                { serverUsers.push(userObj)}
+                if(userId == customUsernames[u].socketId) 
+                { 
+                    customUsernames[u].username = userName 
+                }
+                else if(!JSON.stringify(customUsernames).includes(userObj.socketId))
+                { 
+                    customUsernames.push(userObj)
+                }
             }
         }
             
         //debugging
-        console.log(serverUsers)
+        console.log(customUsernames)
         
         //refresh info on screen
         updateInfo(client)
@@ -557,32 +575,66 @@ SocketServer.of("/").on('connection', (client) => {
                 }
             }
 
+            //log
+            console.log(">>>>>>>>> ROOMS: " + serverRooms.length + " · USERS: " + serverTotalUsers + " <<<<<<<<<")
+            
+            //print all users
+            // for(let u in serverUsersList)
+            // {
+            //     console.log(serverUsersList[u])
+            // }
+
             //print active rooms
             for(let v in newVideosCurrentlyPlaying)
             {
                 //variables
                 let obj = newVideosCurrentlyPlaying[v]
+                let sm = obj.syncMaster
+                let pl = "#"
+                let vi = obj.playlistCurrentVideoIndex
+                let rn = obj.room
+                let vs = obj.lastWholeSecond
+                let vp = "#"
+                let nr = v;
+                let jobj = JSON.stringify(obj)
+
+                if(sm) { sm = sm.toString().substr(0, 4) }
+                if(obj.videoPlaylistId) { pl = obj.videoPlaylistId.toString().substring(0, 8) }
+                if(obj.videoPlaylist) { vi = obj.videoPlaylist }
+                if(rn) { rn = rn }
+                if(vs) { vs = vs }
+                if(nr) { nr++; }
 
                 //log
-                console.log("video command: " + "room = " + obj.room + " / " + "lastWholeSecond: " + obj.lastWholeSecond + " / " + "syncMaster = " + obj.syncMaster + " / " + "video index = " + obj.playlistCurrentVideoIndex + " / " + "playlist id = " + obj.videoPlaylistId)
+                console.log(
+                    "· " +
+                    "#" +  nr + " · " + 
+                    rn + " · " + 
+                    "SM:" + sm + " · " + 
+                    "VI:" + obj.playlistCurrentVideoIndex + " · " + 
+                    "PL:" + vp + " · " +    
+                    vs + "s" 
+                )
             }
 
             //update videos currently playing
             videosCurrentlyPlaying = newVideosCurrentlyPlaying
 
             //log
-            console.log("videosCurrentlyPlaying: " + videosCurrentlyPlaying.length)
-            console.log("newVideosCurrentlyPlaying: " + newVideosCurrentlyPlaying.length)
             console.log("")
+            //console.log("videosCurrentlyPlaying: " + videosCurrentlyPlaying.length)
+            //console.log("newVideosCurrentlyPlaying: " + newVideosCurrentlyPlaying.length)
                 
             //handle client username
-            for (u in serverUsers)
+            for (let u in customUsernames)
             {
-                //set user
-                let user = serverUsers[u]
-    
                 //set custom username if exists
-                if(user.socketId == msgObj.userId) { msgObj.userName = user.username; break }
+                if(customUsernames[u].socketId == msgObj.userId) 
+                { 
+                    msgObj.userName = customUsernames[u].username 
+                    break 
+                }
+
             }
     
             //debugging
@@ -590,8 +642,6 @@ SocketServer.of("/").on('connection', (client) => {
             // console.log("message room: " + msgObj.room)
             // console.log("message userId: " + msgObj.userId)
             // console.log("message userName: " + msgObj.userName)
-            // console.log("total saved users (serverUsers) "  + serverUsers.length)
-            // console.log(serverUsers)
     
             //send socket message     
             SocketServer.sockets.in(msgObj.room).emit('video command', msgObj)
