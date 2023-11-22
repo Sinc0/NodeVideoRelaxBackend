@@ -55,6 +55,7 @@ SocketServer.of("/").on('connection', (client) => {
     let clientId = client.id
     let clientName = "anon" + client.id.substring(0, 4).toUpperCase()
 
+
     //join temp room
     client.join("temp") 
 
@@ -89,7 +90,7 @@ SocketServer.of("/").on('connection', (client) => {
     //ON CREATE ROOM
     client.on('create room', (msg) => {
         //variables
-        let newRoom = msg[0]
+        let newRoom = msg[0].toLowerCase()
         let oldRoom = msg[1]
         
         //check for forbidden characters
