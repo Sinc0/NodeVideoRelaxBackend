@@ -118,17 +118,24 @@ SocketServer.of("/").on('connection', (client) => {
     client.on('disconnect', () => {
         //variables
         let clientRooms = Array.from(client.adapter.rooms, ([room]) => ({room}))
-        let disconnectRoom = clientRooms[1]
+        let disconnectRoom = ""
+        let clientId = client.id
         
-        //null check
-        if(disconnectRoom != null)
+        //update server users list
+        for(let c in serverUsersList)
         {
-            //create msgs
-            let msgLeftRoom = {content: " left the room", room: disconnectRoom, userId: client.id, userName: clientName }
-    
-            //send socket message
-            SocketServer.sockets.in(clientRooms[1].room).emit('leave room', msgLeftRoom)
+            if(serverUsersList[c][0] == clientId) 
+            {
+                disconnectRoom = serverUsersList[c][1] //room user left
+                serverUsersList.splice(c, 1) //update array
+            }
         }
+
+        //create msgs
+        let msgLeftRoom = {content: " left the room", room: disconnectRoom, userId: client.id, userName: clientName }
+        
+        //send socket message
+        SocketServer.sockets.in(disconnectRoom).emit('leave room', msgLeftRoom)
 
         //update info on screen
         updateInfoOnScreen(client)
@@ -297,7 +304,7 @@ function updateInfoOnScreen(client, clientNsp, clientIp, socketId)
     //variables
     let rooms = client.adapter.rooms
     let clients = client.adapter.sids
-    let clientsAll = (Array.from(clients))
+    let clientsAll = Array.from(clients)
     let allClients = Array.from(clients, ([client]) => ({ type: 'client', client }))
     let allRooms = Array.from(rooms, ([room, clients]) => ({type: 'room', room, clients: Array.from(clients) }))
     let allRoomsFormatted = []
@@ -307,8 +314,25 @@ function updateInfoOnScreen(client, clientNsp, clientIp, socketId)
     
     //set total users arrays
     serverTotalUsers = clientsAll.length
-    serverUsersList = clientsAll
 
+    //add client to server users list
+    for(let u in clientsAll) 
+    {
+        let user = Array.from(clientsAll[u][1])
+        let userId = user[0]
+        let userRoom = user[1] 
+        
+        //add user to array
+        if(!serverUsersList.toString().includes(userId)) { serverUsersList.push(user) }
+       
+        //update user room
+        else 
+        { 
+            for(let c in serverUsersList) 
+            { if(serverUsersList[c][0] == userId) { serverUsersList[c][1] = userRoom; break } } 
+        }
+    }
+    
     //sort client names
     for(c in clientsAll)
     {
@@ -337,13 +361,10 @@ function updateInfoOnScreen(client, clientNsp, clientIp, socketId)
         clientsAllJSON.push(clientJSON)
     }
 
-    //remove personal client rooms from rooms list
+    //remove personal rooms
     for(r in allRooms)
     {
-        if(allRooms[r].room != allRooms[r].clients)
-        {
-            allRoomsFormatted.push(allRooms[r])
-        }
+        if(allRooms[r].room != allRooms[r].clients) { allRoomsFormatted.push(allRooms[r]) }
     }
     
     //send socket message
@@ -373,6 +394,8 @@ function randomPlaylist(category)
 function devLog(serverRooms, serverTotalUsers, newVideosCurrentlyPlaying)
 {
     //header
+    console.log("")
+    console.log("")
     console.log("")
     console.log(">>>>>>>>> ROOMS: " + serverRooms.length + " · USERS: " + serverTotalUsers + " <<<<<<<<<")
         
