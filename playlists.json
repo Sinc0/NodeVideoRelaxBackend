@@ -1,30 +1,46 @@
 [
     {
-        "category": "general",
-        "urls": ["PLxnadpeGdTxCwRkZTLMhjbT_EAu6bAIZy", "PLy1UbTtb_A9L4gkexK3sHwYo3pfVAOSQI", "PLWS1kJ_66HMILlgZqHJBlBQqllP2o-gmm"]
+        "category": "architecture",
+        "urls": ["PLb7ecGIVBdDKLCacldJLVG-Yca09pfedb", "PLEmWzqc0D6MgHW7w_b-vWARi_eAmyDd8W", "PLEmWzqc0D6MjrTRovmTmg0ZV2iVCI0HuS"]
     },
     {
-        "category": "gaming",
-        "urls": ["PLJAzFcYKyx4RA6_z6pq3bJlJuENg5kWKV", "PLTxgzJqWtkFbixxAee4S1z4Vlv3nTZF-t", "PLVX_ojm9zPq7yLlqFGhCLG_1GSHD3vpvu"]
+        "category": "documentary",
+        "urls": ["PLovlAKbQVz6BaS4Skn9c7HQdVRXrAkWwI", "PLLgqOez346ZNT8F1-ShmXddQCFMhGJahT", "playlist?list=UULFj4M5DuNnQ-Ogo1v_1Q7YLA"]
     },
     {
         "category": "driving",
         "urls": ["PLvEhUAlWIdM2AC47sT16KMbF3JMX_lr7k", "PLvEhUAlWIdM0ERpUEGx_TK3WYwz3cbP1Z", "PLvEhUAlWIdM349f_-Ht79I5uNOHKA7tQR"]
     },
     {
-        "category": "walking",
-        "urls": ["PLkmb1BBi8y90-CorXEewW-X7TRXdTzGYU", "PLplsp2_xJka-CrsKq2a6DdFGu8_vehrm8", "PLkmb1BBi8y92uCNjinJI0LHLQOvnD_iu0"]
+        "category": "drones",
+        "urls": ["PLdhB2hC90YEuguwsbNyO3WMhQi3TMsVFO", "PLz6T42qJoDPn08VNpwr4_8A8_KI86uivQ", "PLz6T42qJoDPlpJcR3kaeL7weBY6OAMqrd"]
     },
     {
         "category": "food",
         "urls": ["PLeoy0zUu6bqlVkoXIZAFtuzO2N_kloRut", "PLUeEVLHfB5-TqrfYtVSLI_9lg934xsDRd", "PLnPDn1Lb79JFjhC17KjxiFU41SKivZfrW"]
     },
     {
-        "category": "drones",
-        "urls": ["PLdhB2hC90YEuguwsbNyO3WMhQi3TMsVFO", "PLz6T42qJoDPn08VNpwr4_8A8_KI86uivQ", "PLz6T42qJoDPlpJcR3kaeL7weBY6OAMqrd"]
+        "category": "gaming",
+        "urls": ["PLJAzFcYKyx4RA6_z6pq3bJlJuENg5kWKV", "PLTxgzJqWtkFbixxAee4S1z4Vlv3nTZF-t", "PLVX_ojm9zPq7yLlqFGhCLG_1GSHD3vpvu"]
     },
     {
-        "category": "documentary",
-        "urls": ["PLovlAKbQVz6BaS4Skn9c7HQdVRXrAkWwI", "PL3GrymsIop4ka3VVrrMVjjde4T9Zi_r7F", "PLvahqwMqN4M0GRkZY8WkLZMb6Z-W7qbLA"]
+        "category": "general",
+        "urls": ["PLxnadpeGdTxCwRkZTLMhjbT_EAu6bAIZy", "PLy1UbTtb_A9L4gkexK3sHwYo3pfVAOSQI", "PLWS1kJ_66HMILlgZqHJBlBQqllP2o-gmm"]
+    },
+    {
+        "category": "nature",
+        "urls": ["PL3GrymsIop4ka3VVrrMVjjde4T9Zi_r7F", "PL3GrymsIop4ka3VVrrMVjjde4T9Zi_r7F", "PL3GrymsIop4ka3VVrrMVjjde4T9Zi_r7F"]
+    },
+    {
+        "category": "netflix",
+        "urls": ["PLvahqwMqN4M1RQNOoXqIZOZ4nKNnfGZuo", "PLvahqwMqN4M1RQNOoXqIZOZ4nKNnfGZuo", "PLvahqwMqN4M1RQNOoXqIZOZ4nKNnfGZuo"]
+    },
+    {
+        "category": "statistics",
+        "urls": ["playlist?list=UULFkWbqlDAyJh2n8DN5X6NZyg", "playlist?list=UULFkWbqlDAyJh2n8DN5X6NZyg", "playlist?list=UULFqUqrucDk_yGi_KkR9SLJSA"]
+    },
+    {
+        "category": "walking",
+        "urls": ["PLkmb1BBi8y90-CorXEewW-X7TRXdTzGYU", "PLplsp2_xJka-CrsKq2a6DdFGu8_vehrm8", "PLkmb1BBi8y92uCNjinJI0LHLQOvnD_iu0"]
     }
 ]
