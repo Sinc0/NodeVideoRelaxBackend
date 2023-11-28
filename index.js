@@ -438,12 +438,22 @@ function devLog(serverRooms, serverTotalUsers, newVideosCurrentlyPlaying)
 
         //log
         console.log(
-            "· " +
-            "#" +  nr + " · " + 
-            rn + " · " + 
+            //video id
+            "· #" +  nr + " · " +
+            
+            //room name
+            rn + " · " +
+            
+            //room sync master
             "SM:" + sm + " · " + 
+            
+            //video index
             "VI:" + vi + " · " + 
-            "PL:" + pl + " · " +    
+
+            //video is playlist
+            "PL:" + pl + " · " + 
+            
+            //video seconds
             vs + "s"
         )
     }
