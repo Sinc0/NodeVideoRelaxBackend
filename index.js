@@ -69,17 +69,21 @@ SocketServer.of("/").on('connection', (client) => {
         //variables
         let newRoom = msg[0]
         let oldRoom = msg[1]
+        let msgLeftRoom = ""
+        let msgJoinRoom = ""
 
-        //leave old socket room and join new socket room
+        //leave old room
         client.leave(oldRoom)
+
+        //join new room
         client.join(newRoom)
 
         //update info on screen
         updateInfoOnScreen(client)
 
-        //create socket messages
-        let msgLeftRoom = {content: " left the room", room: newRoom, userId: client.id, userName: clientName }
-        let msgJoinRoom = {content: " joined the room", room: newRoom, userId: client.id, userName: clientName }
+        //set socket messages
+        msgLeftRoom = {content: " left the room", room: newRoom, userId: client.id, userName: clientName }
+        msgJoinRoom = {content: " joined the room", room: newRoom, userId: client.id, userName: clientName }
         
         //send socket messages
         SocketServer.sockets.in(oldRoom).emit('leave room', msgLeftRoom)
@@ -92,6 +96,8 @@ SocketServer.of("/").on('connection', (client) => {
         //variables
         let newRoom = msg[0].toLowerCase()
         let oldRoom = msg[1]
+        let msgLeftRoom = ""
+        let msgCreateRoom
         
         //check for forbidden characters
         newRoom = newRoom.replace(",", "")
@@ -106,8 +112,8 @@ SocketServer.of("/").on('connection', (client) => {
         updateInfoOnScreen(client)
         
         //create msgs
-        let msgLeftRoom = {content: " left the room", room: newRoom, userId: client.id, userName: clientName }
-        let msgCreateRoom = {content: " created room " + newRoom, room: newRoom, userId: client.id, userName: clientName }
+        msgLeftRoom = {content: " left the room", room: newRoom, userId: client.id, userName: clientName }
+        msgCreateRoom = {content: " created room " + newRoom, room: newRoom, userId: client.id, userName: clientName }
         
         //send socket messages
         SocketServer.sockets.in(oldRoom).emit('leave room', msgLeftRoom)
@@ -121,19 +127,20 @@ SocketServer.of("/").on('connection', (client) => {
         let clientRooms = Array.from(client.adapter.rooms, ([room]) => ({room}))
         let disconnectRoom = ""
         let clientId = client.id
+        let msgLeftRoom = ""
         
         //update server users list
         for(let c in serverUsersList)
         {
             if(serverUsersList[c][0] == clientId) 
             {
-                disconnectRoom = serverUsersList[c][1] //room user left
-                serverUsersList.splice(c, 1) //update array
+                disconnectRoom = serverUsersList[c][1] //user left this room
+                serverUsersList.splice(c, 1) //remove user from array
             }
         }
 
-        //create msgs
-        let msgLeftRoom = {content: " left the room", room: disconnectRoom, userId: client.id, userName: clientName }
+        //set left room message
+        msgLeftRoom = {content: " left the room", room: disconnectRoom, userId: client.id, userName: clientName }
         
         //send socket message
         SocketServer.sockets.in(disconnectRoom).emit('leave room', msgLeftRoom)
@@ -146,17 +153,17 @@ SocketServer.of("/").on('connection', (client) => {
     //ON VIDEO COMMAND
     client.on('video command', (msgObj) => {
         //variables
-        var content = msgObj.content
-        var room = msgObj.room
-        var userId = msgObj.userId
-        var userName = msgObj.userName
-        var playingVideosLastWholeSecond = msgObj.playingVideosLastWholeSecond
-        var playingVideoId = msgObj.playingVideoId
-        var videoPlaying = msgObj.videoPlaying
-        var playlistCurrentVideoIndex = msgObj.playlistCurrentVideoIndex
-        var videoPlaylist = msgObj.videoPlaylist
-        var videoPlaylistId = msgObj.videoPlaylistId
-        var syncMaster = msgObj.syncMaster
+        let room = msgObj.room
+        let playingVideosLastWholeSecond = msgObj.playingVideosLastWholeSecond
+        let playingVideoId = msgObj.playingVideoId
+        let videoPlaying = msgObj.videoPlaying
+        let syncMaster = msgObj.syncMaster
+        let content = msgObj.content
+        let userId = msgObj.userId
+        let userName = msgObj.userName
+        let playlistCurrentVideoIndex = msgObj.playlistCurrentVideoIndex
+        let videoPlaylist = msgObj.videoPlaylist
+        let videoPlaylistId = msgObj.videoPlaylistId
         
 
         //VIDEO COMMAND - RESYNC 2
@@ -229,12 +236,13 @@ SocketServer.of("/").on('connection', (client) => {
             //variables
             let roomName = "\"" + "room" + "\"" + ":" + "\"" + room + "\""
             let newVideosCurrentlyPlaying = []
-            let rd = JSON.parse("{" 
-                                + "\"room\"" + ":" + "\"" + room + "\"" + "," + "\"videoId\"" + ":" + "\"" + playingVideoId + "\"" + "," + 
-                                "\"lastWholeSecond\"" + ":" + playingVideosLastWholeSecond + "," + "\"id\"" + ":" + "\"" + room + 
-                                playingVideoId + "\"" + "," + "\"videoPlaying\"" + ":" + "\"" + videoPlaying + "\"" + "," + "\"syncMaster\"" + 
-                                ":" + "\"" + syncMaster + "\"" + 
-                            "}")
+            let rd = JSON.parse(
+                "{" 
+                    + "\"room\"" + ":" + "\"" + room + "\"" + "," + "\"videoId\"" + ":" + "\"" + playingVideoId + "\"" + "," + 
+                    "\"lastWholeSecond\"" + ":" + playingVideosLastWholeSecond + "," + "\"id\"" + ":" + "\"" + room + 
+                    playingVideoId + "\"" + "," + "\"videoPlaying\"" + ":" + "\"" + videoPlaying + "\"" + "," + "\"syncMaster\"" + 
+                    ":" + "\"" + syncMaster + "\"" + 
+                "}")
             
 
             
@@ -262,7 +270,7 @@ SocketServer.of("/").on('connection', (client) => {
                     }
                 }
 
-                //add new room
+                //add new room to array
                 else if(!JSON.stringify(videosCurrentlyPlaying).includes(roomName))
                 {
                     videosCurrentlyPlaying.push(rd)
@@ -354,7 +362,7 @@ function updateInfoOnScreen(client, clientNsp, clientIp, socketId)
                         "\"type\"" + ":" + "\"client\"" + "," + "\"namespace\"" + ":" + "\"" + clientNsp + "\"" + "," + "\"id\"" + ":" + 
                         "\"" + clientId + "\"" + "," + "\"room\"" + ":" + "\"" + clientRoom + "\"" + "," + 
                         "\"name\""+ ":" + "\"" + clientName + "\"" + 
-                        "}"
+                      "}"
 
         clientJSON = JSON.parse(clientJSON)
         
@@ -419,7 +427,8 @@ function devLog(serverRooms, serverTotalUsers, newVideosCurrentlyPlaying)
         let vp = "#"
         let nr = v;
         let jobj = JSON.stringify(obj)
-
+        
+        //null check
         if(sm) { sm = sm.toString().substr(0, 4) }
         if(obj.videoPlaylist) { pl = obj.videoPlaylist }
         if(obj.playlistCurrentVideoIndex) { vi = obj.playlistCurrentVideoIndex; vi++ }
@@ -427,6 +436,7 @@ function devLog(serverRooms, serverTotalUsers, newVideosCurrentlyPlaying)
         if(vs) { vs = vs }
         if(nr) { nr++; }
 
+        //log
         console.log(
             "· " +
             "#" +  nr + " · " + 
