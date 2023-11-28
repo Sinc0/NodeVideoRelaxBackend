@@ -159,7 +159,7 @@ SocketServer.of("/").on('connection', (client) => {
         var syncMaster = msgObj.syncMaster
         
 
-        //RESYNC 2
+        //VIDEO COMMAND - RESYNC 2
         if(msgObj.content == "resync2 video")
         {
             for(roomObj in videosCurrentlyPlaying)
@@ -180,7 +180,7 @@ SocketServer.of("/").on('connection', (client) => {
         }
 
 
-        //RANDOM PLAYLIST
+        //VIDEO COMMAND - RANDOM PLAYLIST
         else if(msgObj.content == "random playlist")
         {
             //variables
@@ -200,7 +200,7 @@ SocketServer.of("/").on('connection', (client) => {
         }
         
 
-        //LOAD VIDEO
+        //VIDEO COMMAND - LOAD VIDEO
         else if(msgObj.content == "load video")
         {
             //update obj
@@ -223,7 +223,7 @@ SocketServer.of("/").on('connection', (client) => {
         }
         
 
-        //OTHERS
+        //VIDEO COMMAND - OTHERS
         else if(msgObj.content != "load video")
         {
             //variables
