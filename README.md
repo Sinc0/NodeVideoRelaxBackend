@@ -1,9 +1,9 @@
 ### Summary
 - Name: Video Relax Backend
-- Description:
+- Description: Serve frontend with data
 - LoC: ~400
-- Logo:
-- Features:
+- Logo: null
+- Features: null
 
 ### Technologies
 - [Node](https://nodejs.org)
@@ -22,8 +22,3 @@
 - [On Socket Video Command - Load Video](https://github.com/Sinc0/NodeVideoRelax/blob/master/index.js#L210-L230)
 - [On Socket Video Command - Others](https://github.com/Sinc0/NodeVideoRelax/blob/master/index.js#L234-L302)
 - [Update Frontend UI](https://github.com/Sinc0/NodeVideoRelax/blob/master/index.js#L311-L384)
-
-### Releases
-- []()
-
-
